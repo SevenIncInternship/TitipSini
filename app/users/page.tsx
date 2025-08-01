@@ -1,11 +1,9 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar" // Updated import
-import { Header } from "@/components/layout/header" // Updated import
-import { useAuth } from "@/lib/auth" // Updated import
+import { useState, useEffect } from "react"
+import { Sidebar } from "@/components/layout/sidebar"
+import { Header } from "@/components/layout/header"
+import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,39 +19,32 @@ interface InternalUser {
   email: string
   role: "admin" | "finance"
   status: "active" | "inactive"
-  createdAt: Date
-  lastLogin?: Date
+  createdAt: string
+  lastLogin?: string
 }
 
-const mockUsers: InternalUser[] = [
-  {
-    id: "1",
-    name: "Admin User",
-    email: "admin@titipsini.com",
-    role: "admin",
-    status: "active",
-    createdAt: new Date("2024-01-15"),
-    lastLogin: new Date("2024-01-29"),
-  },
-  {
-    id: "2",
-    name: "Finance User",
-    email: "finance@titipsini.com",
-    role: "finance",
-    status: "active",
-    createdAt: new Date("2024-01-20"),
-    lastLogin: new Date("2024-01-28"),
-  },
-]
-
 export default function UsersPage() {
-  const { user, loading } = useAuth() // Get loading state
-  const [users, setUsers] = useState<InternalUser[]>(mockUsers)
+  const { user, loading } = useAuth()
+  const [users, setUsers] = useState<InternalUser[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<InternalUser | null>(null)
+  const [loadingUsers, setLoadingUsers] = useState(true)
 
-  // Handle loading state first
+  // Ambil user dari API
+  const fetchUsers = async () => {
+    setLoadingUsers(true)
+    const res = await fetch("/api/users")
+    const data = await res.json()
+    setUsers(data)
+    setLoadingUsers(false)
+  }
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  // Loading awal (auth)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -62,6 +53,7 @@ export default function UsersPage() {
     )
   }
 
+  // Cek role superadmin
   if (user?.role !== "superadmin") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -74,35 +66,44 @@ export default function UsersPage() {
     )
   }
 
+  // Filter pencarian
   const filteredUsers = users.filter(
     (u) =>
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleCreateUser = (userData: Partial<InternalUser>) => {
-    const newUser: InternalUser = {
-      id: Date.now().toString(),
-      name: userData.name || "",
-      email: userData.email || "",
-      role: userData.role || "admin",
-      status: "active",
-      createdAt: new Date(),
-    }
-    setUsers([...users, newUser])
+  // Tambah user baru (POST)
+  const handleCreateUser = async (userData: Partial<InternalUser>) => {
+    await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    })
+    fetchUsers()
     setIsDialogOpen(false)
   }
 
-  const handleEditUser = (userData: Partial<InternalUser>) => {
+  // Edit user (PUT)
+  const handleEditUser = async (userData: Partial<InternalUser>) => {
     if (editingUser) {
-      setUsers(users.map((u) => (u.id === editingUser.id ? { ...u, ...userData } : u)))
+      await fetch(`/api/users/${editingUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      })
+      fetchUsers()
       setEditingUser(null)
       setIsDialogOpen(false)
     }
   }
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter((u) => u.id !== userId))
+  // Hapus user (DELETE)
+  const handleDeleteUser = async (userId: string) => {
+    await fetch(`/api/users/${userId}`, {
+      method: "DELETE",
+    })
+    fetchUsers()
   }
 
   return (
@@ -127,7 +128,9 @@ export default function UsersPage() {
               </DialogTrigger>
               <DialogContent className="bg-white border-gray-200">
                 <DialogHeader>
-                  <DialogTitle className="text-gray-900">{editingUser ? "Edit User" : "Tambah User Baru"}</DialogTitle>
+                  <DialogTitle className="text-gray-900">
+                    {editingUser ? "Edit User" : "Tambah User Baru"}
+                  </DialogTitle>
                 </DialogHeader>
                 <UserForm user={editingUser} onSubmit={editingUser ? handleEditUser : handleCreateUser} />
               </DialogContent>
@@ -148,59 +151,70 @@ export default function UsersPage() {
           </div>
 
           {/* Users Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((u) => (
-              <Card key={u.id} className="bg-white border border-gray-200 shadow-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 green-gradient rounded-full flex items-center justify-center">
-                        {u.role === "admin" ? (
-                          <Shield className="h-5 w-5 text-white" />
-                        ) : (
-                          <DollarSign className="h-5 w-5 text-white" />
-                        )}
+          {loadingUsers ? (
+            <p className="text-gray-600">Loading data...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredUsers.map((u) => (
+                <Card key={u.id} className="bg-white border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 green-gradient rounded-full flex items-center justify-center">
+                          {u.role === "admin" ? (
+                            <Shield className="h-5 w-5 text-white" />
+                          ) : (
+                            <DollarSign className="h-5 w-5 text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <CardTitle className="text-gray-900 text-sm">{u.name}</CardTitle>
+                          <Badge
+                            variant={u.role === "admin" ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {u.role.toUpperCase()}
+                          </Badge>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-gray-900 text-sm">{u.name}</CardTitle>
-                        <Badge variant={u.role === "admin" ? "default" : "secondary"} className="text-xs">
-                          {u.role.toUpperCase()}
-                        </Badge>
-                      </div>
+                      <Badge variant={u.status === "active" ? "default" : "destructive"}>{u.status}</Badge>
                     </div>
-                    <Badge variant={u.status === "active" ? "default" : "destructive"}>{u.status}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-gray-700">{u.email}</p>
-                    <p className="text-gray-500">Dibuat: {u.createdAt.toLocaleDateString("id-ID")}</p>
-                    {u.lastLogin && (
-                      <p className="text-gray-500">Login terakhir: {u.lastLogin.toLocaleDateString("id-ID")}</p>
-                    )}
-                  </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <p className="text-gray-700">{u.email}</p>
+                      <p className="text-gray-500">
+                        Dibuat: {new Date(u.createdAt).toLocaleDateString("id-ID")}
+                      </p>
+                      {u.lastLogin && (
+                        <p className="text-gray-500">
+                          Login terakhir: {new Date(u.lastLogin).toLocaleDateString("id-ID")}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="flex space-x-2 mt-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
-                      onClick={() => {
-                        setEditingUser(u)
-                        setIsDialogOpen(true)
-                      }}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeleteUser(u.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex space-x-2 mt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                        onClick={() => {
+                          setEditingUser(u)
+                          setIsDialogOpen(true)
+                        }}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDeleteUser(u.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
