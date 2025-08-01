@@ -33,7 +33,7 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Akses Ditolak</h1>
           <p className="text-gray-600">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
         </div>
-      </div>
+      </div> 
     )
   }
 
