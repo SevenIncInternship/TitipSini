@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth" // Updated import
 import { Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation"
+
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -16,16 +18,20 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const { login, loading } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+  e.preventDefault()
+  setError("")
 
-    const success = await login(email, password)
-    if (!success) {
-      setError("Email atau password salah")
-    }
+  const success = await login(email, password)
+  if (success) {
+    router.push("/dashboard") 
+  } else {
+    setError("Email atau password salah")
   }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
