@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const mitras = await prisma.mitra.findMany({
       orderBy: { createdAt: "desc" },
-      include: { owner: true },
+      include: { user: true },
     })
     return NextResponse.json(mitras)
   } catch (error) {
