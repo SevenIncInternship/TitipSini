@@ -48,9 +48,12 @@ const mockUsers: User[] = [
   },
 ]
 
+import { useRouter } from "next/navigation"
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter() // ← Tambahkan ini
 
   useEffect(() => {
     const storedUser = localStorage.getItem("titipsini_user")
@@ -80,13 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem("titipsini_user")
+    router.replace("/login") // ← Redirect ke halaman login setelah logout
   }
 
- return (
-  <AuthContext.Provider value={{ user, login, logout, loading }}>
-    {children}
-  </AuthContext.Provider>
-)
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

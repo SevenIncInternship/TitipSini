@@ -2,18 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-<<<<<<< HEAD
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth" // Updated import
-=======
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
->>>>>>> master
+import { SidebarContent } from "@/components/ui/sidebar"
 import {
   LayoutDashboard,
   Users,
@@ -29,14 +23,9 @@ import {
   TrendingUp,
   Bell,
   DollarSign,
-<<<<<<< HEAD
   Shield,
-=======
->>>>>>> master
   Globe,
 } from "lucide-react"
-import { SidebarContent } from "@/components/ui/sidebar"
-import { useRouter } from "next/navigation"
 
 const navigationItems = {
   superadmin: [
@@ -92,11 +81,7 @@ export function Sidebar() {
 
   return (
     <>
-<<<<<<< HEAD
-      {/* Mobile menu button */}
-=======
       {/* Tombol menu di mobile */}
->>>>>>> master
       <Button
         variant="ghost"
         size="icon"
@@ -115,18 +100,16 @@ export function Sidebar() {
       <div
         className={cn(
           "fixed left-0 top-0 z-40 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-center h-16 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-<<<<<<< HEAD
               <div className="w-8 h-8 green-gradient rounded-lg flex items-center justify-center">
                 <Shield className="h-5 w-5 text-white" />
               </div>
-=======
               <Image
                 src="/logotitipsini.png"
                 alt="Titipsini"
@@ -134,7 +117,6 @@ export function Sidebar() {
                 height={32}
                 className="rounded-md"
               />
->>>>>>> master
               <h1 className="text-xl font-bold text-green-600">Titipsini</h1>
             </div>
           </div>
@@ -166,7 +148,7 @@ export function Sidebar() {
                     "flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
                       ? "green-gradient text-white shadow-md"
-                      : "text-gray-700 hover:bg-green-50 hover:text-green-700",
+                      : "text-gray-700 hover:bg-green-50 hover:text-green-700"
                   )}
                   onClick={() => setIsOpen(false)}
                 >
@@ -177,24 +159,20 @@ export function Sidebar() {
             })}
           </SidebarContent>
 
-<<<<<<< HEAD
           {/* Logout */}
-=======
-          {/* Tombol Logout */}
->>>>>>> master
           <div className="p-4 border-t border-gray-200">
             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={() => {
-              logout()
-              setTimeout(() => {
-              router.push("/login")
-                  }, 100) // beri delay kecil agar state user sempat null
-                  }}
+                logout()
+                setTimeout(() => {
+                  router.push("/login")
+                }, 100)
+              }}
             >
               <LogOut className="h-5 w-5 mr-3" />
-                Logout
+              Logout
             </Button>
           </div>
         </div>

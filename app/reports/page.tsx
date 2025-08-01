@@ -1,16 +1,6 @@
 "use client"
 
-<<<<<<< HEAD
-import dynamic from "next/dynamic"
-
-// Lazy load client component with SSR disabled (hanya bisa di client component)
-const ReportClient = dynamic(() => import("./ReportClient"), { ssr: false })
-
-export default function ReportsPage() {
-  return <ReportClient />
-=======
 import { useRef, useState, useMemo } from "react"
-import dynamic from "next/dynamic"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
@@ -23,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 // Dynamic import untuk html2pdf agar hanya dimuat di sisi klien
 const html2pdfPromise = typeof window !== "undefined" ? import("html2pdf.js") : Promise.resolve(null)
 
-// Helper untuk format mata uang Rupiah
+// Helper format uang Rupiah
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -31,10 +21,8 @@ const formatCurrency = (amount: number) =>
     minimumFractionDigits: 0,
   }).format(amount)
 
-// Helper untuk mendapatkan nama Mitra dari ID
 const getMitraName = (mitraId: string) => mockMitra.find((m) => m.id === mitraId)?.name || "N/A"
 
-// Helper untuk badge status invoice
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "paid":
@@ -48,7 +36,6 @@ const getStatusBadge = (status: string) => {
   }
 }
 
-// Helper untuk badge status transaksi
 const getTransactionStatusBadge = (status: string) => {
   switch (status) {
     case "active":
@@ -62,7 +49,6 @@ const getTransactionStatusBadge = (status: string) => {
   }
 }
 
-// Komponen untuk Ringkasan Keuangan
 function FinancialSummary() {
   return (
     <>
@@ -77,7 +63,6 @@ function FinancialSummary() {
             <p className="text-xs opacity-90 mt-1">Total tagihan yang diterbitkan</p>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium opacity-90">Jumlah Dibayar</CardTitle>
@@ -87,7 +72,6 @@ function FinancialSummary() {
             <p className="text-xs opacity-90 mt-1">Total pembayaran diterima</p>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium opacity-90">Outstanding</CardTitle>
@@ -102,7 +86,6 @@ function FinancialSummary() {
   )
 }
 
-// Komponen untuk Invoice Terbaru
 function LatestInvoices() {
   return (
     <>
@@ -127,7 +110,6 @@ function LatestInvoices() {
   )
 }
 
-// Komponen untuk Ringkasan Operasional
 function OperationalSummary() {
   return (
     <>
@@ -156,7 +138,6 @@ function OperationalSummary() {
   )
 }
 
-// Komponen untuk Transaksi Terbaru
 function LatestTransactions() {
   return (
     <>
@@ -181,9 +162,8 @@ function LatestTransactions() {
   )
 }
 
-// Komponen untuk Transaksi Mitra
 function MitraTransactions({ userId }: { userId: string }) {
-  const filteredTransactions = useMemo(
+  const filtered = useMemo(
     () => mockTransactions.filter((t) => mockMitra.find((m) => m.id === t.branchId)?.id === userId),
     [userId]
   )
@@ -192,19 +172,17 @@ function MitraTransactions({ userId }: { userId: string }) {
     <>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Laporan Transaksi Saya</h2>
       <div className="space-y-4 mb-8">
-        {filteredTransactions.length > 0 ? (
-          filteredTransactions.slice(0, 5).map((transaction) => (
-            <Card key={transaction.id} className="bg-white border border-gray-200 shadow-sm">
+        {filtered.length > 0 ? (
+          filtered.slice(0, 5).map((t) => (
+            <Card key={t.id} className="bg-white border border-gray-200 shadow-sm">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-gray-800 font-medium">{transaction.customerName}</p>
-                  <p className="text-sm text-gray-600">{transaction.itemDescription}</p>
+                  <p className="text-gray-800 font-medium">{t.customerName}</p>
+                  <p className="text-sm text-gray-600">{t.itemDescription}</p>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(transaction.totalAmount)}
-                  </span>
-                  {getTransactionStatusBadge(transaction.status)}
+                  <span className="text-lg font-bold text-green-600">{formatCurrency(t.totalAmount)}</span>
+                  {getTransactionStatusBadge(t.status)}
                 </div>
               </CardContent>
             </Card>
@@ -217,16 +195,15 @@ function MitraTransactions({ userId }: { userId: string }) {
   )
 }
 
-// Komponen untuk Invoice Mitra
 function MitraInvoices({ userId }: { userId: string }) {
-  const filteredInvoices = useMemo(() => mockInvoices.filter((inv) => inv.mitraId === userId), [userId])
+  const filtered = useMemo(() => mockInvoices.filter((i) => i.mitraId === userId), [userId])
 
   return (
     <>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Laporan Invoice Saya</h2>
       <div className="space-y-4 mb-8">
-        {filteredInvoices.length > 0 ? (
-          filteredInvoices.slice(0, 5).map((invoice) => (
+        {filtered.length > 0 ? (
+          filtered.slice(0, 5).map((invoice) => (
             <Card key={invoice.id} className="bg-white border border-gray-200 shadow-sm">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
@@ -248,7 +225,6 @@ function MitraInvoices({ userId }: { userId: string }) {
   )
 }
 
-// Komponen untuk pesan laporan kosong
 function EmptyReportMessage({ message }: { message: string }) {
   return (
     <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6 text-center">
@@ -259,16 +235,12 @@ function EmptyReportMessage({ message }: { message: string }) {
   )
 }
 
-// ---
-
-// Komponen utama ReportsPage
 export default function ReportsPage() {
   const { user, loading } = useAuth()
   const reportContentRef = useRef<HTMLDivElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
-  // Tampilkan spinner loading saat data user sedang diambil
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -277,7 +249,6 @@ export default function ReportsPage() {
     )
   }
 
-  // Batasi akses berdasarkan peran pengguna
   if (!user || !["superadmin", "admin", "finance", "mitra"].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -290,34 +261,20 @@ export default function ReportsPage() {
     )
   }
 
-  // Handle pembuatan PDF (Preview & Download)
   const generatePdf = async (action: "preview" | "download") => {
-    if (typeof window === "undefined" || !reportContentRef.current) return
+    if (!reportContentRef.current) return
 
     setIsProcessing(true)
     const html2pdf = (await html2pdfPromise)?.default
-
-    if (!html2pdf) {
-      console.error("html2pdf.js tidak dimuat.")
-      setIsProcessing(false)
-      return
-    }
+    if (!html2pdf) return
 
     const options = {
-      margin: [0.5, 0.5, 0.5, 0.5], // Margin Atas, Kanan, Bawah, Kiri (dalam inci)
+      margin: [0.5, 0.5, 0.5, 0.5],
       filename: `Laporan_Titipsini_${user.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
       image: { type: "jpeg", quality: 1 },
-      html2canvas: {
-        scale: 3,
-        logging: false,
-        useCORS: true,
-      },
-      jsPDF: {
-        unit: "in",
-        format: "a4", // Ukuran kertas A4
-        orientation: "portrait",
-      },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] }, // Pemisahan halaman otomatis yang cerdas
+      html2canvas: { scale: 3, logging: false, useCORS: true },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
     }
 
     try {
@@ -327,9 +284,8 @@ export default function ReportsPage() {
       } else {
         await html2pdf().from(reportContentRef.current).set(options).save()
       }
-    } catch (error) {
-      console.error(`Error saat ${action === "preview" ? "membuat preview" : "mengunduh"} PDF:`, error)
-      alert(`Gagal ${action === "preview" ? "membuat preview" : "mengunduh"} PDF. Silakan coba lagi.`)
+    } catch (err) {
+      console.error("Gagal memproses PDF", err)
     } finally {
       setIsProcessing(false)
     }
@@ -342,37 +298,24 @@ export default function ReportsPage() {
 
       <main className="md:ml-64 pt-16 p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Bagian Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Laporan</h1>
               <p className="text-gray-600 mt-2">Lihat berbagai laporan dan analitik.</p>
             </div>
             <div className="flex gap-3">
-              <Button
-                onClick={() => generatePdf("preview")}
-                disabled={isProcessing}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-              >
+              <Button onClick={() => generatePdf("preview")} disabled={isProcessing} className="bg-blue-500 hover:bg-blue-600 text-white">
                 <Eye className="h-4 w-4 mr-2" />
                 {isProcessing ? "Memproses..." : "Preview"}
               </Button>
-              <Button
-                onClick={() => generatePdf("download")}
-                disabled={isProcessing}
-                className="green-gradient hover:opacity-90"
-              >
+              <Button onClick={() => generatePdf("download")} disabled={isProcessing} className="green-gradient hover:opacity-90">
                 <Printer className="h-4 w-4 mr-2" />
                 {isProcessing ? "Mencetak..." : "Download"}
               </Button>
             </div>
           </div>
 
-          {/* Area Konten Laporan */}
-          <div
-            ref={reportContentRef}
-            className="bg-white p-6 rounded-lg shadow-sm print:w-full print:p-0 print:shadow-none"
-          >
+          <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm print:w-full print:p-0 print:shadow-none">
             {(user.role === "superadmin" || user.role === "finance") && (
               <>
                 <FinancialSummary />
@@ -391,29 +334,19 @@ export default function ReportsPage() {
               <>
                 <MitraTransactions userId={user.id} />
                 <MitraInvoices userId={user.id} />
-                {/* Tampilkan pesan kosong hanya jika tidak ada transaksi dan tidak ada invoice */}
-                {mockTransactions.filter((t) => mockMitra.find((m) => m.id === t.branchId)?.id === user.id)
-                  .length === 0 &&
-                  mockInvoices.filter((inv) => inv.mitraId === user.id).length === 0 && (
-                    <EmptyReportMessage message="Data laporan Anda akan muncul di sini setelah ada aktivitas." />
-                  )}
               </>
             )}
           </div>
 
-          {/* Modal Preview PDF */}
           {pdfPreviewUrl && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
               <div className="bg-white w-full max-w-4xl h-[90vh] rounded-lg overflow-hidden relative flex flex-col">
                 <div className="p-4 bg-gray-100 flex justify-between items-center">
                   <h3 className="text-lg font-bold text-gray-800">Preview Laporan PDF</h3>
-                  <Button
-                    onClick={() => {
-                      setPdfPreviewUrl(null)
-                      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl) // Bersihkan URL Blob
-                    }}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                  >
+                  <Button onClick={() => {
+                    setPdfPreviewUrl(null)
+                    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl)
+                  }} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
                     Tutup Preview
                   </Button>
                 </div>
@@ -427,5 +360,4 @@ export default function ReportsPage() {
       </main>
     </div>
   )
->>>>>>> master
 }

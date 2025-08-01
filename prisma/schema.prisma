@@ -1,6 +1,3 @@
-// Prisma Schema - TitipSini
-// Dokumentasi: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,103 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/////////////////////////////////////////////////////////
-// USER
-/////////////////////////////////////////////////////////
+model branch {
+  id          String        @id
+  name        String
+  address     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  mitraId     String
+  mitra       mitra         @relation(fields: [mitraId], references: [id], map: "Branch_mitraId_fkey")
+  transaction transaction[]
 
-/// Represents a user in the system (superadmin, admin, finance, or regular user).
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  role      String   @default("user") // superadmin, admin, finance, user
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relation: user bisa memiliki banyak mitra
-  mitras Mitra[]
+  @@index([mitraId], map: "Branch_mitraId_fkey")
 }
 
-/////////////////////////////////////////////////////////
-// MITRA
-/////////////////////////////////////////////////////////
+model invoice {
+  id            String   @id
+  invoiceNumber String   @unique(map: "Invoice_invoiceNumber_key")
+  total         Float
+  dueDate       DateTime
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  mitraId       String
+  mitra         mitra    @relation(fields: [mitraId], references: [id], map: "Invoice_mitraId_fkey")
 
-/// Represents a Mitra (Partner/Vendor) with details, tier, and status.
-model Mitra {
-  id          String    @id @default(cuid())
+  @@index([mitraId], map: "Invoice_mitraId_fkey")
+}
+
+model mitra {
+  id          String    @id
   name        String
-  email       String    @unique
+  email       String    @unique(map: "Mitra_email_key")
   phone       String?
   address     String?
-  tier        String                    // bronze, silver, gold
-  status      String    @default("pending") // active, suspended, pending
+  tier        String
+  status      String    @default("pending")
   suspendedAt DateTime?
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime
+  ownerId     String?
+  branch      branch[]
+  invoice     invoice[]
+  user        user?     @relation(fields: [ownerId], references: [id], map: "Mitra_ownerId_fkey")
 
-  // Relation ke User (owner)
-  ownerId String?
-  owner   User?     @relation(fields: [ownerId], references: [id])
-
-  // Relation ke branch & invoice
-  branches Branch[]
-  invoices Invoice[]
+  @@index([ownerId], map: "Mitra_ownerId_fkey")
 }
 
-/////////////////////////////////////////////////////////
-// BRANCH (CABANG)
-/////////////////////////////////////////////////////////
-
-/// Represents a branch location of a Mitra.
-model Branch {
-  id        String   @id @default(cuid())
-  name      String
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relation ke Mitra
-  mitra   Mitra  @relation(fields: [mitraId], references: [id])
-  mitraId String
-
-  // Relation ke transaksi
-  transactions Transaction[]
-}
-
-/////////////////////////////////////////////////////////
-// TRANSACTION
-/////////////////////////////////////////////////////////
-
-/// Represents a customer transaction.
-model Transaction {
-  id              String   @id @default(cuid())
+model transaction {
+  id              String   @id
   customerName    String
   itemDescription String
-  amount          Float    // ganti dari totalAmount → amount (agar konsisten dengan API)
-  status          String   // active, picked_up, overdue
+  amount          Float
+  status          String
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime
+  branchId        String
+  branch          branch   @relation(fields: [branchId], references: [id], map: "Transaction_branchId_fkey")
 
-  // Relation ke Branch
-  branch   Branch @relation(fields: [branchId], references: [id])
-  branchId String
+  @@index([branchId], map: "Transaction_branchId_fkey")
 }
 
-/////////////////////////////////////////////////////////
-// INVOICE
-/////////////////////////////////////////////////////////
-
-/// Represents an invoice issued to a Mitra.
-model Invoice {
-  id            String   @id @default(cuid())
-  invoiceNumber String   @unique
-  total         Float    // ganti dari amount → total (agar konsisten dengan API)
-  dueDate       DateTime
-  status        String   @default("pending") // paid, unpaid, overdue
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relation ke Mitra
-  mitra   Mitra  @relation(fields: [mitraId], references: [id])
-  mitraId String
+model user {
+  id        String   @id @default(uuid())
+  email     String   @unique(map: "User_email_key")
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String?
+  status    String   @default("active")
+  mitra     mitra[]
 }
