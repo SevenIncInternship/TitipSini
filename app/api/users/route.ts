@@ -8,24 +8,35 @@ const prisma = new PrismaClient();
 export async function GET() {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
-    include: { mitras: true }, // relasi mitra
+    include: { mitra: true }, // relasi mitra
   });
   return NextResponse.json(users);
 }
 
 // POST: Tambah user baru
 export async function POST(req: Request) {
-  const data = await req.json();
+  try {
+    const data = await req.json();
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+    if (!data.email || !data.password || !data.role) {
+      return NextResponse.json({ error: "Email, password, dan role wajib diisi" }, { status: 400 });
+    }
 
-  const newUser = await prisma.user.create({
-    data: {
-      email: data.email,
-      password: hashedPassword,
-      role: data.role || "user", // default user
-    },
-  });
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  return NextResponse.json(newUser, { status: 201 });
+    const newUser = await prisma.user.create({
+      data: {
+        email: data.email,
+        name: data.name || "",
+        password: hashedPassword,
+        role: data.role || "user",
+        status: "active",
+      },
+    });
+
+    return NextResponse.json(newUser, { status: 201 });
+  } catch (error) {
+    console.error("User creation error:", error);
+    return NextResponse.json({ error: "Gagal menambahkan user" }, { status: 500 });
+  }
 }

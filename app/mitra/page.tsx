@@ -33,11 +33,18 @@ export default function MitraPage() {
 
   // 🔹 Fetch data Mitra dari API
   useEffect(() => {
-    fetch("/api/mitra")
-      .then((res) => res.json())
-      .then((data) => setMitras(data))
-      .catch((err) => console.error("Gagal ambil data Mitra:", err));
-  }, []);
+  fetch("/api/mitra")
+    .then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status} - ${text}`);
+      }
+      return res.json();
+    })
+    .then((data) => setMitras(data))
+    .catch((err) => console.error("Gagal ambil data Mitra:", err));
+}, []);
+
 
   // 🔹 Loading state
   if (loading) {

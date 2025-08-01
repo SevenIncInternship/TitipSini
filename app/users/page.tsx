@@ -9,9 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Shield, DollarSign } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import UserForm from "@/components/users/UserForm"
 
 interface InternalUser {
   id: string
@@ -31,20 +36,24 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<InternalUser | null>(null)
   const [loadingUsers, setLoadingUsers] = useState(true)
 
-  // Ambil user dari API
   const fetchUsers = async () => {
-    setLoadingUsers(true)
-    const res = await fetch("/api/users")
-    const data = await res.json()
-    setUsers(data)
-    setLoadingUsers(false)
+    try {
+      setLoadingUsers(true)
+      const res = await fetch("/api/users")
+      if (!res.ok) throw new Error("Gagal ambil data users")
+      const data = await res.json()
+      setUsers(data)
+    } catch (err) {
+      console.error("Fetch users error:", err)
+    } finally {
+      setLoadingUsers(false)
+    }
   }
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
-  // Loading awal (auth)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -53,7 +62,6 @@ export default function UsersPage() {
     )
   }
 
-  // Cek role superadmin
   if (user?.role !== "superadmin") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -66,26 +74,29 @@ export default function UsersPage() {
     )
   }
 
-  // Filter pencarian
   const filteredUsers = users.filter(
     (u) =>
       u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Tambah user baru (POST)
-  const handleCreateUser = async (userData: Partial<InternalUser>) => {
+  const handleCreateUser = async (userData: Partial<InternalUser> & { password?: string }) => {
+    if (!userData.password) {
+      alert("Password harus diisi untuk user baru.")
+      return
+    }
+
     await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     })
+
     fetchUsers()
     setIsDialogOpen(false)
   }
 
-  // Edit user (PUT)
-  const handleEditUser = async (userData: Partial<InternalUser>) => {
+  const handleEditUser = async (userData: Partial<InternalUser> & { password?: string }) => {
     if (editingUser) {
       await fetch(`/api/users/${editingUser.id}`, {
         method: "PUT",
@@ -98,11 +109,8 @@ export default function UsersPage() {
     }
   }
 
-  // Hapus user (DELETE)
   const handleDeleteUser = async (userId: string) => {
-    await fetch(`/api/users/${userId}`, {
-      method: "DELETE",
-    })
+    await fetch(`/api/users/${userId}`, { method: "DELETE" })
     fetchUsers()
   }
 
@@ -121,7 +129,10 @@ export default function UsersPage() {
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="green-gradient hover:opacity-90" onClick={() => setEditingUser(null)}>
+                <Button
+                  className="green-gradient hover:opacity-90"
+                  onClick={() => setEditingUser(null)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah User
                 </Button>
@@ -132,12 +143,14 @@ export default function UsersPage() {
                     {editingUser ? "Edit User" : "Tambah User Baru"}
                   </DialogTitle>
                 </DialogHeader>
-                <UserForm user={editingUser} onSubmit={editingUser ? handleEditUser : handleCreateUser} />
+                <UserForm
+                  user={editingUser}
+                  onSubmit={editingUser ? handleEditUser : handleCreateUser}
+                />
               </DialogContent>
             </Dialog>
           </div>
 
-          {/* Search */}
           <div className="mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -145,12 +158,11 @@ export default function UsersPage() {
                 placeholder="Cari user..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                className="pl-10 border-gray-300"
               />
             </div>
           </div>
 
-          {/* Users Grid */}
           {loadingUsers ? (
             <p className="text-gray-600">Loading data...</p>
           ) : (
@@ -177,7 +189,9 @@ export default function UsersPage() {
                           </Badge>
                         </div>
                       </div>
-                      <Badge variant={u.status === "active" ? "default" : "destructive"}>{u.status}</Badge>
+                      <Badge variant={u.status === "active" ? "default" : "destructive"}>
+                        {u.status}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -197,7 +211,7 @@ export default function UsersPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                        className="flex-1"
                         onClick={() => {
                           setEditingUser(u)
                           setIsDialogOpen(true)
@@ -206,7 +220,11 @@ export default function UsersPage() {
                         <Edit className="h-3 w-3 mr-1" />
                         Edit
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDeleteUser(u.id)}>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteUser(u.id)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -218,77 +236,5 @@ export default function UsersPage() {
         </div>
       </main>
     </div>
-  )
-}
-
-function UserForm({
-  user,
-  onSubmit,
-}: {
-  user: InternalUser | null
-  onSubmit: (data: Partial<InternalUser>) => void
-}) {
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    role: user?.role || ("admin" as "admin" | "finance"),
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="name" className="text-gray-700">
-          Nama
-        </Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="border-gray-300 text-gray-900"
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="email" className="text-gray-700">
-          Email
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="border-gray-300 text-gray-900"
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="role" className="text-gray-700">
-          Role
-        </Label>
-        <Select
-          value={formData.role}
-          onValueChange={(value: "admin" | "finance") => setFormData({ ...formData, role: value })}
-        >
-          <SelectTrigger className="border-gray-300 text-gray-900">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-white border-gray-200">
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="finance">Finance</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Button type="submit" className="w-full green-gradient hover:opacity-90">
-        {user ? "Update User" : "Buat User"}
-      </Button>
-    </form>
   )
 }
