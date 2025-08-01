@@ -53,12 +53,17 @@
     if (!user || !stats) return null
 
     const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-      }).format(amount)
-    }
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount)
+}
+
+  const formatPercentage = (num: number, denom: number) => {
+  if (!denom || denom === 0) return "0% dari total"
+  return `${Math.round((num / denom) * 100)}% dari total`
+}
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -118,16 +123,16 @@
                 </Card>
 
                 <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium opacity-90">Sudah Dibayar</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats.sudahDibayar)}</div>
-                    <p className="text-xs opacity-90 mt-1">
-                      {Math.round((stats.sudahDibayar / stats.invoiceBulanIni) * 100)}% dari total
-                    </p>
-                  </CardContent>
-                </Card>
+  <CardHeader className="pb-2">
+    <CardTitle className="text-sm font-medium opacity-90">Sudah Dibayar</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="text-2xl font-bold">{formatCurrency(stats.sudahDibayar)}</div>
+    <p className="text-xs opacity-90 mt-1">
+      {formatPercentage(stats.sudahDibayar, stats.invoiceBulanIni)}
+    </p>
+  </CardContent>
+</Card>
 
                 <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
                   <CardHeader className="pb-2">
