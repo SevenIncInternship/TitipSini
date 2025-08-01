@@ -16,19 +16,30 @@
 
     // Fetch data dashboard dari API
     useEffect(() => {
-      async function fetchStats() {
-        try {
-          const res = await fetch("/api/dashboard")
-          const data = await res.json()
-          setStats(data)
-        } catch (error) {
-          console.error("Gagal memuat data dashboard:", error)
-        } finally {
-          setLoadingStats(false)
-        }
-      }
-      fetchStats()
-    }, [])
+  if (!user || loading) return // Tunggu sampai user tersedia
+
+  async function fetchStats() {
+    try {
+      const res = await fetch("/api/dashboard", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // atau ambil dari context
+        },
+      })
+
+      if (!res.ok) throw new Error("Gagal mengambil data")
+
+      const data = await res.json()
+      setStats(data)
+    } catch (error) {
+      console.error("Gagal memuat data dashboard:", error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  fetchStats()
+}, [user, loading]) // <- tunggu sampai user siap
+
 
     // Handle loading state
     if (loading || loadingStats) {
