@@ -25,6 +25,7 @@ import {
   Globe,
 } from "lucide-react"
 import { SidebarContent } from "@/components/ui/sidebar"
+import { useRouter } from "next/navigation"
 
 const navigationItems = {
   superadmin: [
@@ -72,6 +73,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
 
   if (!user) return null
 
@@ -155,10 +157,15 @@ export function Sidebar() {
             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={logout}
+              onClick={() => {
+              logout()
+              setTimeout(() => {
+              router.push("/login")
+                  }, 100) // beri delay kecil agar state user sempat null
+                  }}
             >
               <LogOut className="h-5 w-5 mr-3" />
-              Logout
+                Logout
             </Button>
           </div>
         </div>
