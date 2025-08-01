@@ -1,14 +1,5 @@
 "use client"
 
-<<<<<<< HEAD
-import dynamic from "next/dynamic"
-
-// Lazy load client component with SSR disabled (hanya bisa di client component)
-const ReportClient = dynamic(() => import("./ReportClient"), { ssr: false })
-
-export default function ReportsPage() {
-  return <ReportClient />
-=======
 import { useRef, useState, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { Sidebar } from "@/components/layout/sidebar"
@@ -259,8 +250,6 @@ function EmptyReportMessage({ message }: { message: string }) {
   )
 }
 
-// ---
-
 // Komponen utama ReportsPage
 export default function ReportsPage() {
   const { user, loading } = useAuth()
@@ -268,7 +257,6 @@ export default function ReportsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
-  // Tampilkan spinner loading saat data user sedang diambil
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -277,7 +265,6 @@ export default function ReportsPage() {
     )
   }
 
-  // Batasi akses berdasarkan peran pengguna
   if (!user || !["superadmin", "admin", "finance", "mitra"].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -290,7 +277,6 @@ export default function ReportsPage() {
     )
   }
 
-  // Handle pembuatan PDF (Preview & Download)
   const generatePdf = async (action: "preview" | "download") => {
     if (typeof window === "undefined" || !reportContentRef.current) return
 
@@ -304,7 +290,7 @@ export default function ReportsPage() {
     }
 
     const options = {
-      margin: [0.5, 0.5, 0.5, 0.5], // Margin Atas, Kanan, Bawah, Kiri (dalam inci)
+      margin: [0.5, 0.5, 0.5, 0.5],
       filename: `Laporan_Titipsini_${user.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
       image: { type: "jpeg", quality: 1 },
       html2canvas: {
@@ -314,10 +300,10 @@ export default function ReportsPage() {
       },
       jsPDF: {
         unit: "in",
-        format: "a4", // Ukuran kertas A4
+        format: "a4",
         orientation: "portrait",
       },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] }, // Pemisahan halaman otomatis yang cerdas
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
     }
 
     try {
@@ -342,7 +328,6 @@ export default function ReportsPage() {
 
       <main className="md:ml-64 pt-16 p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Bagian Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Laporan</h1>
@@ -368,7 +353,6 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Area Konten Laporan */}
           <div
             ref={reportContentRef}
             className="bg-white p-6 rounded-lg shadow-sm print:w-full print:p-0 print:shadow-none"
@@ -391,7 +375,6 @@ export default function ReportsPage() {
               <>
                 <MitraTransactions userId={user.id} />
                 <MitraInvoices userId={user.id} />
-                {/* Tampilkan pesan kosong hanya jika tidak ada transaksi dan tidak ada invoice */}
                 {mockTransactions.filter((t) => mockMitra.find((m) => m.id === t.branchId)?.id === user.id)
                   .length === 0 &&
                   mockInvoices.filter((inv) => inv.mitraId === user.id).length === 0 && (
@@ -401,7 +384,6 @@ export default function ReportsPage() {
             )}
           </div>
 
-          {/* Modal Preview PDF */}
           {pdfPreviewUrl && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
               <div className="bg-white w-full max-w-4xl h-[90vh] rounded-lg overflow-hidden relative flex flex-col">
@@ -410,7 +392,7 @@ export default function ReportsPage() {
                   <Button
                     onClick={() => {
                       setPdfPreviewUrl(null)
-                      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl) // Bersihkan URL Blob
+                      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl)
                     }}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
                   >
@@ -427,5 +409,4 @@ export default function ReportsPage() {
       </main>
     </div>
   )
->>>>>>> master
 }

@@ -2,18 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-<<<<<<< HEAD
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth" // Updated import
-=======
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
->>>>>>> master
 import {
   LayoutDashboard,
   Users,
@@ -29,10 +22,7 @@ import {
   TrendingUp,
   Bell,
   DollarSign,
-<<<<<<< HEAD
   Shield,
-=======
->>>>>>> master
   Globe,
 } from "lucide-react"
 import { SidebarContent } from "@/components/ui/sidebar"
@@ -90,11 +80,7 @@ export function Sidebar() {
 
   return (
     <>
-<<<<<<< HEAD
-      {/* Mobile menu button */}
-=======
       {/* Tombol menu di mobile */}
->>>>>>> master
       <Button
         variant="ghost"
         size="icon"
@@ -120,11 +106,6 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex items-center justify-center h-16 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-<<<<<<< HEAD
-              <div className="w-8 h-8 green-gradient rounded-lg flex items-center justify-center">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
-=======
               <Image
                 src="/logotitipsini.png"
                 alt="Titipsini"
@@ -132,7 +113,6 @@ export function Sidebar() {
                 height={32}
                 className="rounded-md"
               />
->>>>>>> master
               <h1 className="text-xl font-bold text-green-600">Titipsini</h1>
             </div>
           </div>
@@ -175,11 +155,7 @@ export function Sidebar() {
             })}
           </SidebarContent>
 
-<<<<<<< HEAD
-          {/* Logout */}
-=======
           {/* Tombol Logout */}
->>>>>>> master
           <div className="p-4 border-t border-gray-200">
             <Button
               variant="ghost"

@@ -2,43 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-<<<<<<< HEAD
-=======
 /* ===========================
    BASE COLORS & VARIABLES
    =========================== */
->>>>>>> master
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-<<<<<<< HEAD
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142.1 76.2% 36.3%;
-    --radius: 0.5rem;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-=======
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -72,20 +42,15 @@
     @apply border-border;
   }
 
->>>>>>> master
   body {
     @apply bg-background text-foreground;
   }
 }
 
-<<<<<<< HEAD
-=======
 /* ===========================
    CUSTOM UTILITIES
    =========================== */
 
-/* Sidebar & card styles */
->>>>>>> master
 .sidebar-gradient {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
@@ -93,13 +58,9 @@
 .card-light {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-<<<<<<< HEAD
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-=======
   box-shadow:
     0 1px 3px 0 rgb(0 0 0 / 0.1),
     0 1px 2px -1px rgb(0 0 0 / 0.1);
->>>>>>> master
 }
 
 .green-gradient {
@@ -113,8 +74,6 @@
 .titipsini-green-light {
   background-color: #dcfce7;
 }
-<<<<<<< HEAD
-=======
 
 /* ===========================
    PRINT STYLES (untuk PDF)
@@ -149,4 +108,3 @@
     display: none !important;
   }
 }
->>>>>>> master
