@@ -164,12 +164,11 @@ export function Sidebar() {
             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={() => {
-                logout()
-                setTimeout(() => {
-                  router.push("/login")
-                }, 100)
-              }}
+onClick={async () => {
+  await logout()
+  router.push("/login")
+}}
+
             >
               <LogOut className="h-5 w-5 mr-3" />
               Logout

@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem("titipsini_user")
+
     router.replace("/login") // ← Redirect ke halaman login setelah logout
   }
 
@@ -91,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
+
 }
 
 export function useAuth() {

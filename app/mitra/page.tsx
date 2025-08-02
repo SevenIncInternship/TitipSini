@@ -1,13 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Sidebar } from "@/components/layout/sidebar"
+import { Header } from "@/components/layout/header"
+import { useAuth } from "@/lib/auth"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
   Search,
   Eye,
@@ -18,104 +19,91 @@ import {
   Mail,
   MapPin,
   Shield,
-} from "lucide-react";
-import type { Mitra } from "@/types";
-import MitraDetailModal from "@/components/MitraDetailModal";
-import { tierPlans } from "@/lib/data";
+} from "lucide-react"
+import type { Mitra } from "@/types"
+import MitraDetailModal from "@/components/MitraDetailModal"
+import { tierPlans } from "@/lib/data"
 
 export default function MitraPage() {
-  const { user, loading } = useAuth();
-  const [mitras, setMitras] = useState<Mitra[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterTier, setFilterTier] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
+  const { user, loading } = useAuth()
+  const [mitras, setMitras] = useState<Mitra[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterTier, setFilterTier] = useState<string>("all")
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null)
 
-  // 🔹 Fetch data Mitra dari API
   useEffect(() => {
-  fetch("/api/mitra")
-    .then(async (res) => {
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} - ${text}`);
-      }
-      return res.json();
-    })
-    .then((data) => setMitras(data))
-    .catch((err) => console.error("Gagal ambil data Mitra:", err));
-}, []);
+    fetch("/api/mitra")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setMitras(data)
+      })
+      .catch((err) => console.error("Gagal ambil data Mitra:", err))
+  }, [])
 
-
-  // 🔹 Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
       </div>
-    );
+    )
   }
 
-  // 🔹 Access control
   if (!user || !["superadmin", "admin", "finance"].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Akses Ditolak</h1>
-          <p className="text-gray-600">
-            Anda tidak memiliki izin untuk mengakses halaman ini.
-          </p>
+          <p className="text-gray-600">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
         </div>
       </div>
-    );
+    )
   }
 
-  // 🔹 Filter data
   const filteredMitras = mitras.filter((mitra) => {
     const matchesSearch =
       mitra.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mitra.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTier = filterTier === "all" || mitra.tier === filterTier;
-    const matchesStatus = filterStatus === "all" || mitra.status === filterStatus;
+      mitra.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesTier = filterTier === "all" || mitra.tier === filterTier
+    const matchesStatus = filterStatus === "all" || mitra.status === filterStatus
 
-    return matchesSearch && matchesTier && matchesStatus;
-  });
+    return matchesSearch && matchesTier && matchesStatus
+  })
 
-  // 🔹 Suspend & restore
   const handleSuspendMitra = (mitraId: string) => {
     setMitras((prev) =>
       prev.map((m) =>
         m.id === mitraId ? { ...m, status: "suspended", suspendedAt: new Date() } : m
       )
-    );
-  };
+    )
+  }
 
   const handleRestoreMitra = (mitraId: string) => {
     setMitras((prev) =>
       prev.map((m) =>
         m.id === mitraId ? { ...m, status: "active", suspendedAt: undefined } : m
       )
-    );
-  };
+    )
+  }
 
-  // 🔹 Badge status
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500 text-white">Aktif</Badge>;
+        return <Badge className="bg-green-500 text-white">Aktif</Badge>
       case "suspended":
-        return <Badge variant="destructive">Suspended</Badge>;
+        return <Badge variant="destructive">Suspended</Badge>
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">Pending</Badge>
       case "pending_payment":
-        return <Badge className="bg-yellow-500 text-white">Pending Payment</Badge>;
+        return <Badge className="bg-yellow-500 text-white">Pending Payment</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>
     }
-  };
+  }
 
-  // 🔹 Get Tier Info
-  const getTierInfo = (tierName: string) => tierPlans.find((t) => t.name === tierName);
+  const getTierInfo = (tierName: string) => tierPlans.find((t) => t.name === tierName)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,13 +112,11 @@ export default function MitraPage() {
 
       <main className="md:ml-64 pt-16 p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">List Mitra</h1>
             <p className="text-gray-600 mt-2">Kelola semua mitra terdaftar</p>
           </div>
 
-          {/* Filter */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -170,10 +156,9 @@ export default function MitraPage() {
             </div>
           </div>
 
-          {/* List Mitra */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredMitras.map((mitra) => {
-              const tierInfo = getTierInfo(mitra.tier);
+              const tierInfo = getTierInfo(mitra.tier)
 
               return (
                 <Card
@@ -187,9 +172,7 @@ export default function MitraPage() {
                           <Building2 className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-gray-900 text-lg">
-                            {mitra.name}
-                          </CardTitle>
+                          <CardTitle className="text-gray-900 text-lg">{mitra.name}</CardTitle>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge className="bg-blue-500 text-xs text-white">
                               {mitra.tier.toUpperCase()}
@@ -234,14 +217,12 @@ export default function MitraPage() {
                         Bergabung: {new Date(mitra.createdAt).toLocaleDateString("id-ID")}
                         {mitra.status === "suspended" && mitra.suspendedAt && (
                           <span className="ml-2">
-                            (Ditangguhkan:{" "}
-                            {new Date(mitra.suspendedAt).toLocaleDateString("id-ID")})
+                            (Ditangguhkan: {new Date(mitra.suspendedAt).toLocaleDateString("id-ID")})
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     {(user.role === "superadmin" || user.role === "admin") && (
                       <div className="flex space-x-2 mt-4">
                         <Button
@@ -276,24 +257,20 @@ export default function MitraPage() {
                     )}
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
 
-          {/* Jika tidak ada data */}
           {filteredMitras.length === 0 && (
             <div className="text-center py-12">
               <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-600 mb-2">
-                Tidak ada mitra ditemukan
-              </h3>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">Tidak ada mitra ditemukan</h3>
               <p className="text-gray-500">Coba ubah filter pencarian Anda</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Modal Detail Mitra */}
       {selectedMitraId && (
         <MitraDetailModal
           mitra={mitras.find((m) => m.id === selectedMitraId)!}
@@ -306,5 +283,5 @@ export default function MitraPage() {
         />
       )}
     </div>
-  );
+  )
 }
