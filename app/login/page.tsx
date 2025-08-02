@@ -19,5 +19,4 @@ export default function LoginPage() {
   // Sementara loading, kosongkan biar nggak flicker
   if (loading || user) return null
 
-  return <LoginForm />
-}
+

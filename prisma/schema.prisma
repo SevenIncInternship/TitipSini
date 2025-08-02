@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model branch {
+  id          String        @id
+  name        String
+  address     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  mitraId     String
+  mitra       mitra         @relation(fields: [mitraId], references: [id], map: "Branch_mitraId_fkey")
+  transaction transaction[]
+
+  @@index([mitraId], map: "Branch_mitraId_fkey")
+}
+
+model invoice {
+  id            String   @id
+  invoiceNumber String   @unique(map: "Invoice_invoiceNumber_key")
+  total         Float
+  dueDate       DateTime
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  mitraId       String
+  mitra         mitra    @relation(fields: [mitraId], references: [id], map: "Invoice_mitraId_fkey")
+
+  @@index([mitraId], map: "Invoice_mitraId_fkey")
+}
+
+model mitra {
+  id          String    @id
+  name        String
+  email       String    @unique(map: "Mitra_email_key")
+  phone       String?
+  address     String?
+  tier        String
+  status      String    @default("pending")
+  suspendedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  ownerId     String?
+  branch      branch[]
+  invoice     invoice[]
+  user        user?     @relation(fields: [ownerId], references: [id], map: "Mitra_ownerId_fkey")
+
+  @@index([ownerId], map: "Mitra_ownerId_fkey")
+}
+
+model transaction {
+  id              String   @id
+  customerName    String
+  itemDescription String
+  amount          Float
+  status          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  branchId        String
+  branch          branch   @relation(fields: [branchId], references: [id], map: "Transaction_branchId_fkey")
+
+  @@index([branchId], map: "Transaction_branchId_fkey")
+}
+
+model user {
+  id        String   @id @default(uuid())
+  email     String   @unique(map: "User_email_key")
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String?
+  status    String   @default("active")
+  mitra     mitra[]
+}

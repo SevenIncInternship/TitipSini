@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Image from "next/image"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth" // Updated import
+import { useAuth } from "@/lib/auth"
+import { SidebarContent } from "@/components/ui/sidebar"
 import {
   LayoutDashboard,
   Users,
@@ -24,7 +26,6 @@ import {
   Shield,
   Globe,
 } from "lucide-react"
-import { SidebarContent } from "@/components/ui/sidebar"
 
 const navigationItems = {
   superadmin: [
@@ -72,6 +73,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
 
   if (!user) return null
 
@@ -79,7 +81,7 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Tombol menu di mobile */}
       <Button
         variant="ghost"
         size="icon"
@@ -98,7 +100,7 @@ export function Sidebar() {
       <div
         className={cn(
           "fixed left-0 top-0 z-40 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
@@ -108,6 +110,13 @@ export function Sidebar() {
               <div className="w-8 h-8 green-gradient rounded-lg flex items-center justify-center">
                 <Shield className="h-5 w-5 text-white" />
               </div>
+              <Image
+                src="/logotitipsini.png"
+                alt="Titipsini"
+                width={32}
+                height={32}
+                className="rounded-md"
+              />
               <h1 className="text-xl font-bold text-green-600">Titipsini</h1>
             </div>
           </div>
@@ -139,7 +148,7 @@ export function Sidebar() {
                     "flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
                       ? "green-gradient text-white shadow-md"
-                      : "text-gray-700 hover:bg-green-50 hover:text-green-700",
+                      : "text-gray-700 hover:bg-green-50 hover:text-green-700"
                   )}
                   onClick={() => setIsOpen(false)}
                 >
@@ -155,10 +164,10 @@ export function Sidebar() {
             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={async () => {
-                await logout()
-                window.location.href = "/login" // atau router.push("/login")
-              }}
+onClick={async () => {
+  await logout()
+  router.push("/login")
+}}
 
             >
               <LogOut className="h-5 w-5 mr-3" />
