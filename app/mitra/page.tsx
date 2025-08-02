@@ -1,25 +1,25 @@
 "use client"
 
 import { useState } from "react"
-import { Sidebar } from "@/components/layout/sidebar" // Updated import
-import { Header } from "@/components/layout/header" // Updated import
-import { useAuth } from "@/lib/auth" // Updated import
+import Link from "next/link"
+import { Sidebar } from "@/components/layout/sidebar"
+import { Header } from "@/components/layout/header"
+import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Eye, UserX, UserCheck, Building2, Phone, Mail, MapPin } from "lucide-react"
-import { mockMitra, tierPlans } from "@/lib/data" // Updated import
-import type { Mitra } from "@/types" // Updated import
+import { mockMitra, tierPlans } from "@/lib/data"
+import type { Mitra } from "@/types"
 
 export default function MitraPage() {
-  const { user, loading } = useAuth() // Get loading state
+  const { user, loading } = useAuth()
   const [mitras, setMitras] = useState<Mitra[]>(mockMitra)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterTier, setFilterTier] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<string>("all")
 
-  // Handle loading state first
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -89,7 +89,6 @@ export default function MitraPage() {
             <p className="text-gray-600 mt-2">Kelola semua mitra terdaftar</p>
           </div>
 
-          {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -129,16 +128,12 @@ export default function MitraPage() {
             </div>
           </div>
 
-          {/* Mitra Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredMitras.map((mitra) => {
               const tierInfo = getTierInfo(mitra.tier)
 
               return (
-                <Card
-                  key={mitra.id}
-                  className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
+                <Card key={mitra.id} className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
@@ -159,50 +154,23 @@ export default function MitraPage() {
                   </CardHeader>
 
                   <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span>{mitra.email}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        <span>{mitra.phone}</span>
-                      </div>
-
-                      <div className="flex items-start space-x-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                        <span>{mitra.address}</span>
-                      </div>
-
-                      {tierInfo && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
-                          <div className="text-xs text-green-600 mb-1 font-medium">
-                            Paket {tierInfo.name.toUpperCase()}
-                          </div>
-                          <div className="text-sm text-gray-900 font-semibold">
-                            Rp {tierInfo.monthlyPrice.toLocaleString("id-ID")}/bulan
-                          </div>
-                          <div className="text-xs text-gray-600">Maksimal {tierInfo.maxBranches} cabang</div>
-                        </div>
-                      )}
-
-                      <div className="text-xs text-gray-500">
-                        Bergabung: {mitra.createdAt.toLocaleDateString("id-ID")}
-                      </div>
+                    <div className="flex items-center justify-between text-sm text-gray-700">
+                      <span>Status:</span>
+                      {getStatusBadge(mitra.status)}
                     </div>
 
-                    {/* Actions */}
                     {(user.role === "superadmin" || user.role === "admin") && (
                       <div className="flex space-x-2 mt-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          Detail
-                        </Button>
+                        <Link href={`/mitra/${mitra.id}`} className="flex-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Detail
+                          </Button>
+                        </Link>
 
                         {mitra.status === "active" ? (
                           <Button size="sm" variant="destructive" onClick={() => handleSuspendMitra(mitra.id)}>

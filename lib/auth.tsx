@@ -80,7 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem("titipsini_user")
+    window.location.href = "/login" 
   }
+
 
  return (
   <AuthContext.Provider value={{ user, login, logout, loading }}>

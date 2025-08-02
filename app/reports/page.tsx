@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { mockDashboardStats, mockInvoices, mockTransactions, mockMitra } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
-import html2pdf from "html22pdf.js" // Import html2pdf.js
+import html2pdf from "html2pdf.js"
+import { User } from "@/types"
+import router from "next/router"
 
 export default function ReportsPage() {
   const { user, loading } = useAuth() // Get loading state
@@ -17,25 +19,17 @@ export default function ReportsPage() {
   const [isPrinting, setIsPrinting] = useState(false)
 
   // Handle loading state first
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
-    )
+  useEffect(() => {
+  if (!loading && (!user || !["superadmin", "admin"].includes(user.role))) {
+      router.replace("/login")
+    }
+  }, [user, loading])
+
+  if (loading || !user || !["superadmin", "admin"].includes(user.role)) {
+    return null
   }
 
-  if (!user || !["superadmin", "admin", "finance", "mitra"].includes(user.role)) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Akses Ditolak</h1>
-          <p className="text-gray-600">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
-        </div>
-      </div> 
-    )
-  }
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -75,25 +69,31 @@ export default function ReportsPage() {
     }
   }
 
-  const handlePrintPdf = () => {
-    if (reportContentRef.current) {
-      setIsPrinting(true)
-      const element = reportContentRef.current
+  const handlePrintPdf = async () => {
+    if (!reportContentRef.current) return
+    setIsPrinting(true)
+
+    try {
+      const html2pdf = (await import("html2pdf.js")).default
+
       html2pdf()
-        .from(element)
+        .from(reportContentRef.current)
         .set({
           margin: 1,
           filename: `Laporan_Titipsini_${user.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+          html2canvas: { scale: 2 },
           jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
         })
         .save()
-        .finally(() => {
-          setIsPrinting(false)
-        })
+        .finally(() => setIsPrinting(false))
+    } catch (err) {
+      console.error("Gagal mencetak PDF:", err)
+      setIsPrinting(false)
     }
   }
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -293,3 +293,5 @@ export default function ReportsPage() {
     </div>
   )
 }
+
+
