@@ -10,7 +10,9 @@ interface InternalUser {
   id: string
   name: string
   email: string
-  role: "admin" | "finance"
+  phone?: string
+  address?: string
+  role: "superadmin" | "vendor" | "customer"
   status: "active" | "inactive"
   createdAt: string
   lastLogin?: string
@@ -24,16 +26,20 @@ export default function UserForm({
   onSubmit: (data: Partial<InternalUser> & { password?: string }) => void
 }) {
   const [formData, setFormData] = useState<{
-  name: string
-  email: string
-  role: "admin" | "finance"
-  password?: string // ubah ini jadi opsional
-}>({
-  name: user?.name || "",
-  email: user?.email || "",
-  role: user?.role || "admin",
-  password: "", // tetap bisa diisi
-})
+    name: string
+    email: string
+    phone?: string
+    address?: string
+    role: "superadmin" | "vendor" | "customer"
+    password?: string
+  }>({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: user?.address || "",
+    role: user?.role || "customer",
+    password: "", // tetap bisa diisi
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +73,25 @@ export default function UserForm({
         />
       </div>
 
+      <div>
+        <Label htmlFor="phone">Nomor Telepon</Label>
+        <Input
+          id="phone"
+          value={formData.phone || ""}
+          min={10}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        />
+      </div>
+      <div>
+        <Label htmlFor="address">Alamat</Label>
+        <Input
+          id="address"
+          min={10}
+          value={formData.address || ""}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+        />
+      </div>
+
       {!user && (
         <div>
           <Label htmlFor="password">Password</Label>
@@ -84,7 +109,7 @@ export default function UserForm({
         <Label htmlFor="role">Role</Label>
         <Select
           value={formData.role}
-          onValueChange={(value: "admin" | "finance") =>
+          onValueChange={(value: "superadmin" | "customer" | 'vendor') =>
             setFormData({ ...formData, role: value })
           }
         >
@@ -92,8 +117,9 @@ export default function UserForm({
             <SelectValue placeholder="Pilih Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="finance">Finance</SelectItem>
+            <SelectItem value="superadmin">Admin</SelectItem>
+            <SelectItem value="customer">customer</SelectItem>
+            <SelectItem value="vendor">vendor</SelectItem>
           </SelectContent>
         </Select>
       </div>

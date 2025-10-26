@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect, useMemo } from "react"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
@@ -10,10 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { mockDashboardStats, mockInvoices, mockTransactions, mockMitra } from "@/lib/data"
-import EmptyReportMessage from "./EmptyReportMessage" // assuming extracted or re-used component
 
 const html2pdfPromise = typeof window !== "undefined" ? import("html2pdf.js") : Promise.resolve(null)
-const router = useRouter()
+
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -42,12 +41,13 @@ const getTransactionStatusBadge = (status: string) => {
 
 export default function ReportsPage() {
   const { user, loading } = useAuth()
+  const router = useRouter()
   const reportContentRef = useRef<HTMLDivElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && (!user || !["superadmin", "admin", "finance", "mitra"].includes(user.role))) {
+    if (!loading && (!user || !["superadmin", "admin", "finance", "vendor"].includes(user.role))) {
       router.replace("/login")
     }
   }, [user, loading])
@@ -116,7 +116,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm">
+          {/* <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm">
             {(user.role === "superadmin" || user.role === "finance") && (
               <>
                 <FinancialSummary />
@@ -137,7 +137,7 @@ export default function ReportsPage() {
                 <MitraInvoices userId={user.id} />
               </>
             )}
-          </div>
+          </div> */}
 
           {pdfPreviewUrl && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">

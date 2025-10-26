@@ -11,7 +11,7 @@ import { ErrorMessage } from "@/components/error-message" // Updated import
 
 const translations = {
   english: {
-    title: "Let'ss confirm you are human",
+    title: "Let's confirm you are human",
     description:
       "Complete the security check before continuing. This step verifies that you are not a bot, which helps to protect your account and prevent spam.",
     begin: "Begin",

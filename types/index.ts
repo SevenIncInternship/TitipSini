@@ -2,7 +2,7 @@ export interface User {
   id: string
   email: string
   name: string
-  role: "superadmin" | "admin" | "finance" | "mitra"
+  role: "superadmin" | "customer" | "finance" | "vendor"
   status: "active" | "suspended"
   createdAt: Date
 }
@@ -45,9 +45,8 @@ export interface TierPlan {
 export interface Category {
   id: string
   name: string
-  dailyRate: number
+  dailyRate: number 
   description: string
-  isActive: boolean
   order: number
 }
 

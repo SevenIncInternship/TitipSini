@@ -18,7 +18,7 @@ export default function TransactionsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
 
   const userBranches = useMemo(() => {
-    if (user && user.role === "mitra") {
+    if (user && user.role === "vendor") {
       return mockBranches.filter((branch) => branch.mitraId === user.id)
     }
     return []
@@ -27,7 +27,7 @@ export default function TransactionsPage() {
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
 
-    if (user && user.role === "mitra") {
+    if (user && user.role === "vendor") {
       const userBranchIds = userBranches.map((b) => b.id)
       filtered = filtered.filter((t) => userBranchIds.includes(t.branchId))
     }
@@ -53,7 +53,7 @@ export default function TransactionsPage() {
   }
 
   // Now that loading is false, check user and role
-  if (!user || user.role !== "mitra") {
+  if (!user || user.role !== "vendor") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

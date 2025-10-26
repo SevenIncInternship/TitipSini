@@ -31,13 +31,13 @@ const navigationItems = {
   superadmin: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Manajemen User", href: "/users", icon: Users },
-    { name: "Verifikasi Mitra", href: "/mitra/verification", icon: UserCheck },
+    // { name: "Verifikasi Mitra", href: "/mitra/verification", icon: UserCheck },
     { name: "List Mitra", href: "/mitra", icon: Building2 },
-    { name: "Verifikasi Cabang", href: "/branches/verification", icon: MapPin },
+    // { name: "Verifikasi Cabang", href: "/branches/verification", icon: MapPin },
     { name: "Kategori Barang", href: "/categories", icon: Package },
     { name: "Tarif Harian", href: "/pricing", icon: DollarSign },
     { name: "Jenis Kemitraan", href: "/tiers", icon: TrendingUp },
-    { name: "Invoice & Pembayaran", href: "/invoices", icon: CreditCard },
+    // { name: "Invoice & Pembayaran", href: "/invoices", icon: CreditCard },
     { name: "Laporan", href: "/reports", icon: FileText },
     { name: "Landing Page", href: "/content", icon: Globe },
     { name: "Pengingat", href: "/reminders", icon: Bell },
@@ -60,7 +60,7 @@ const navigationItems = {
     { name: "Laporan Keuangan", href: "/reports", icon: FileText },
     { name: "Pengingat", href: "/reminders", icon: Bell },
   ],
-  mitra: [
+  vendor: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Profil & Cabang", href: "/profile", icon: Building2 },
     { name: "Transaksi", href: "/transactions", icon: Package },
@@ -76,7 +76,7 @@ export function Sidebar() {
   const router = useRouter()
 
   if (!user) return null
-
+  // @ts-ignore
   const navItems = navigationItems[user.role] || []
 
   return (
@@ -136,7 +136,9 @@ export function Sidebar() {
 
           {/* Navigation */}
           <SidebarContent className="p-4 space-y-2">
-            {navItems.map((item) => {
+            {navItems.map((
+              // @ts-ignore
+              item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
 
