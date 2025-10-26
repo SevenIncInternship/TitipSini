@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, createContext, useContext } from "react"
+import { useRouter } from "next/navigation"
 import type { User } from "@/types"
 
 interface AuthContextType {
@@ -12,48 +13,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// Mock users for demo
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "superadmin@titipsini.com",
-    name: "Super Admin",
-    role: "superadmin",
-    status: "active",
-    createdAt: new Date(),
-  },
-  {
-    id: "2",
-    email: "admin@titipsini.com",
-    name: "Admin User",
-    role: "admin",
-    status: "active",
-    createdAt: new Date(),
-  },
-  {
-    id: "3",
-    email: "finance@titipsini.com",
-    name: "Finance User",
-    role: "finance",
-    status: "active",
-    createdAt: new Date(),
-  },
-  {
-    id: "4", // Matching mitra user ID with mockMitra
-    email: "mitra@example.com",
-    name: "Mitra Example",
-    role: "mitra",
-    status: "active",
-    createdAt: new Date(),
-  },
-]
 
-import { useRouter } from "next/navigation"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter() // ← Tambahkan ini
+  const router = useRouter()
 
   useEffect(() => {
     const storedUser = localStorage.getItem("titipsini_user")
@@ -63,28 +28,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
+  // 🔐 Login pakai API backend Fastify
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-    const foundUser = mockUsers.find((u) => u.email === email)
-    if (foundUser && password === "password123") {
-      setUser(foundUser)
-      localStorage.setItem("titipsini_user", JSON.stringify(foundUser))
+      if (!res.ok) {
+        // Jika status bukan 200, anggap login gagal
+        setLoading(false)
+        return false
+      }
+
+      const data = await res.json()
+
+      // Pastikan response API ada data user & token
+      if (data?.user && data?.token) {
+        // Simpan user dan token ke localStorage
+        localStorage.setItem("titipsini_user", JSON.stringify(data.user))
+        localStorage.setItem("titipsini_token", data.token)
+
+        setUser(data.user)
+        setLoading(false)
+        return true
+      }
+
       setLoading(false)
-      return true
+      return false
+    } catch (err) {
+      console.error("Login failed:", err)
+      setLoading(false)
+      return false
     }
-
-    setLoading(false)
-    return false
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("titipsini_user")
+    localStorage.removeItem("titipsini_token")
 
-    router.replace("/login") // ← Redirect ke halaman login setelah logout
+    router.replace("/login") // Redirect ke login
   }
 
   return (
@@ -92,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-
 }
 
 export function useAuth() {

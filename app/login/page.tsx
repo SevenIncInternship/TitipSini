@@ -10,13 +10,21 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
-      // Redirect ke dashboard sesuai role
+    const storedUser = localStorage.getItem("titipsini_user")
+    const storedToken = localStorage.getItem("titipsini_token")
+
+    // Jika sudah login, langsung ke dashboard
+    if (!loading && (user || (storedUser && storedToken))) {
       router.replace("/dashboard")
     }
   }, [user, loading, router])
 
-  // Sementara loading, kosongkan biar nggak flicker
+  // Sembunyikan tampilan selama loading untuk mencegah flicker
   if (loading || user) return null
 
-
+  return (
+    <div className="flex items-center justify-center">
+      <LoginForm />
+    </div>
+  )
+}

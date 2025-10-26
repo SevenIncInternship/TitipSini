@@ -22,7 +22,9 @@ interface InternalUser {
   id: string
   name: string
   email: string
-  role: "admin" | "finance"
+  phone?: string
+  address?: string
+  role: "superadmin" | "customer" | "vendor"
   status: "active" | "inactive"
   createdAt: string
   lastLogin?: string
@@ -39,7 +41,11 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true)
-      const res = await fetch("/api/users")
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`,
+        },
+      })
       if (!res.ok) throw new Error("Gagal ambil data users")
       const data = await res.json()
       setUsers(data)
@@ -81,37 +87,106 @@ export default function UsersPage() {
   )
 
   const handleCreateUser = async (userData: Partial<InternalUser> & { password?: string }) => {
-    if (!userData.password) {
-      alert("Password harus diisi untuk user baru.")
-      return
+    try {
+      if (!userData.password) {
+        alert("Password harus diisi untuk user baru.")
+        return
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`,
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          address: userData.address || "-",
+          role: userData.role,
+          password: userData.password,
+        }),
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error("Create user failed:", errText)
+        alert("Gagal membuat user. Periksa input Anda.")
+        return
+      }
+
+      await fetchUsers()
+      setIsDialogOpen(false)
+    } catch (err) {
+      console.error("Error saat membuat user:", err)
+      alert("Terjadi kesalahan jaringan.")
     }
-
-    await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    })
-
-    fetchUsers()
-    setIsDialogOpen(false)
   }
+
 
   const handleEditUser = async (userData: Partial<InternalUser> & { password?: string }) => {
-    if (editingUser) {
-      await fetch(`/api/users/${editingUser.id}`, {
+    if (!editingUser) return
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${editingUser.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`,
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          address: userData.address,
+          role: userData.role,
+          password: userData.password || undefined, // hanya kirim kalau ada
+        }),
       })
-      fetchUsers()
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error("Edit user failed:", errText)
+        alert("Gagal mengubah data user.")
+        return
+      }
+
+      await fetchUsers()
       setEditingUser(null)
       setIsDialogOpen(false)
+      alert("User berhasil diperbarui.")
+    } catch (err) {
+      console.error("Error saat edit user:", err)
+      alert("Terjadi kesalahan jaringan.")
     }
   }
 
+
   const handleDeleteUser = async (userId: string) => {
-    await fetch(`/api/users/${userId}`, { method: "DELETE" })
-    fetchUsers()
+    if (!confirm("Yakin ingin menghapus user ini?")) return
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`,
+        },
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error("Delete user failed:", errText)
+        alert("Gagal menghapus user.")
+        return
+      }
+
+      await fetchUsers()
+      alert("User berhasil dihapus.")
+    } catch (err) {
+      console.error("Error saat hapus user:", err)
+      alert("Terjadi kesalahan jaringan.")
+    }
   }
 
   return (
@@ -173,7 +248,7 @@ export default function UsersPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 green-gradient rounded-full flex items-center justify-center">
-                          {u.role === "admin" ? (
+                          {u.role === "superadmin" ? (
                             <Shield className="h-5 w-5 text-white" />
                           ) : (
                             <DollarSign className="h-5 w-5 text-white" />
@@ -182,12 +257,22 @@ export default function UsersPage() {
                         <div>
                           <CardTitle className="text-gray-900 text-sm">{u.name}</CardTitle>
                           <Badge
-                            variant={u.role === "admin" ? "default" : "secondary"}
+                            // @ts-ignore
+                            variant={
+                              u.role === "superadmin"
+                                ? "default"
+                                : u.role === "vendor"
+                                  ? "secondary"
+                                  : u.role === "customer"
+                                    ? "primary"
+                                    : "outline"
+                            }
                             className="text-xs"
                           >
                             {u.role.toUpperCase()}
                           </Badge>
                         </div>
+
                       </div>
                       <Badge variant={u.status === "active" ? "default" : "destructive"}>
                         {u.status}

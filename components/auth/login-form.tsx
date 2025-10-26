@@ -28,19 +28,37 @@ export function LoginForm() {
     e.preventDefault()
     setError("")
 
-    const success = await login(email, password)
-    if (success) {
-      router.push("/dashboard")
-    } else {
-      setError("Email atau password salah")
+    try {
+      const success = await login(email, password)
+
+      if (success) {
+        // Ambil user dari localStorage
+        const storedUser = localStorage.getItem("titipsini_user")
+        const user = storedUser ? JSON.parse(storedUser) : null
+
+        if (user?.role === "superadmin") {
+          router.push("/dashboard")
+        } else if (user?.role === "vendor") {
+          router.push("/transactions")
+        } else {
+          // fallback kalau role lain
+          router.push("/dashboard")
+        }
+      } else {
+        setError("Email atau password salah")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("Terjadi kesalahan saat login")
     }
   }
 
+
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full md:w-[700px] max-w-md">
         <CardHeader className="text-center">
-          {/* LOGO */}
           <div className="mx-auto mb-4">
             <Image
               src="/logotitipsini.png"
@@ -109,8 +127,8 @@ export function LoginForm() {
             </Button>
           </form>
 
-          {/* Demo account info */}
-          <div className="mt-6 text-center">
+          {/* Info Demo Account */}
+          {/* <div className="mt-6 text-center">
             <div className="text-sm text-gray-600 mb-2">Demo Accounts:</div>
             <div className="text-xs text-gray-500 space-y-1">
               <div>Superadmin: superadmin@titipsini.com</div>
@@ -119,7 +137,7 @@ export function LoginForm() {
               <div>Mitra: mitra@example.com</div>
               <div className="font-medium">Password: password123</div>
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

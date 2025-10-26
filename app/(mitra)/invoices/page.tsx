@@ -28,7 +28,7 @@ export default function InvoicesPage() {
   }
 
   // Now that loading is false, check user and role
-  if (!user || !["superadmin", "finance", "mitra"].includes(user.role)) {
+  if (!user || !["vendor"].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -43,7 +43,7 @@ export default function InvoicesPage() {
   const filteredInvoices = useMemo(() => {
     let filtered = invoices
 
-    if (user.role === "mitra") {
+    if (user.role === "vendor") {
       filtered = filtered.filter((invoice) => invoice.mitraId === user.id) // Assuming user.id matches mitraId
     }
 
@@ -143,7 +143,7 @@ export default function InvoicesPage() {
                       <CardTitle className="text-gray-900 text-lg">{invoice.invoiceNumber}</CardTitle>
                       <div className="flex items-center space-x-2 mt-1">
                         {getStatusBadge(invoice.status)}
-                        {user.role !== "mitra" && (
+                        {user.role !== "vendor" && (
                           <span className="text-sm text-gray-600">untuk {getMitraName(invoice.mitraId)}</span>
                         )}
                       </div>
