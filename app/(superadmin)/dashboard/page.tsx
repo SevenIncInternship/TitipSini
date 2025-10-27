@@ -88,7 +88,7 @@ export default function DashboardPage() {
       <Sidebar />
       <Header />
 
-      <main className="md:ml-64 pt-16 p-6">
+      <main className="md:ml-64  p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
