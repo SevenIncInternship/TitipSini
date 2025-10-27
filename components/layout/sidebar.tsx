@@ -168,6 +168,7 @@ export function Sidebar() {
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
 onClick={async () => {
   await logout()
+  
   router.push("/login")
 }}
 

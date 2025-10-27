@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/lib/auth"
 import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -42,7 +43,7 @@ export function LoginForm() {
           router.push("/transactions")
         } else {
           // fallback kalau role lain
-          router.push("/dashboard")
+          router.push("/customer/dashboard")
         }
       } else {
         setError("Email atau password salah")
@@ -125,6 +126,18 @@ export function LoginForm() {
             >
               {loading ? "Memproses..." : "Masuk"}
             </Button>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Belum punya akun?{" "}
+                <Link
+                  href="/register"
+                  className="text-green-600 hover:underline"
+                >
+                  Daftar
+                </Link>
+              </p>
+            </div>
           </form>
 
           {/* Info Demo Account */}

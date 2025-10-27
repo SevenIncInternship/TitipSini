@@ -143,7 +143,7 @@ export default function CategoriesPage() {
       <Sidebar />
       <Header />
 
-      <main className="md:ml-64 pt-16 p-6">
+      <main className="md:ml-64 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
             <div>
