@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
@@ -8,43 +8,94 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Package, CalendarDays, QrCode, Shield } from "lucide-react"
-import { mockTransactions, mockBranches, categories as mockCategories } from "@/lib/data"
-import type { Transaction } from "@/types"
+import { categories as mockCategories } from "@/lib/data"
+
+interface GoodsItem {
+  id: string
+  vendorBranchId: string
+  userId: string
+  categoryId: string
+  name: string
+  quantity: number
+  dateIn: string
+  dateOut: string
+  dayTotal: number
+  paymentMethod: string
+  bank: string | null
+  status: boolean
+  totalPrice: number
+  createdAt: string
+  vendorBranch: {
+    id: string
+    vendorId: string
+    name: string
+    address: string
+    phone: string
+  }
+}
 
 export default function TransactionsPage() {
-  const { user, loading } = useAuth() // Get loading state
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
+  const { user, loading } = useAuth()
+  const [transactions, setTransactions] = useState<GoodsItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [isFetching, setIsFetching] = useState(false)
 
-  const userBranches = useMemo(() => {
-    if (user && user.role === "vendor") {
-      return mockBranches.filter((branch) => branch.mitraId === user.id)
+  // Ambil data vendorId dari token localStorage
+  const storedUser = typeof window !== "undefined" ? localStorage.getItem("titipsini_user") : null
+  const parsedUser = storedUser ? JSON.parse(storedUser) : null
+  const vendorId = parsedUser?.vendorId
+
+  // Fetch data dari endpoint Fastify
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!user || user.role !== "vendor" || !vendorId) return
+
+      setIsFetching(true)
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/goods?vendorId=${vendorId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`,
+            },
+          }
+        )
+
+        const data = await res.json()
+        setTransactions(data.data || [])
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error)
+      } finally {
+        setIsFetching(false)
+      }
     }
-    return []
-  }, [user])
 
+    fetchTransactions()
+  }, [user, vendorId])
+
+
+  // Filter transaksi
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
 
-    if (user && user.role === "vendor") {
-      const userBranchIds = userBranches.map((b) => b.id)
-      filtered = filtered.filter((t) => userBranchIds.includes(t.branchId))
-    }
-
     return filtered.filter((t) => {
       const matchesSearch =
-        t.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.itemDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.qrCode.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = filterStatus === "all" || t.status === filterStatus
+        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.vendorBranch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.vendorBranch.address.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "active" && t.status === true) ||
+        (filterStatus === "picked_up" && t.status === false)
 
       return matchesSearch && matchesStatus
     })
-  }, [transactions, searchTerm, filterStatus, user, userBranches])
+  }, [transactions, searchTerm, filterStatus])
 
-  // Handle loading state first
-  if (loading) {
+  // Loading state
+  if (loading || isFetching) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
@@ -52,7 +103,7 @@ export default function TransactionsPage() {
     )
   }
 
-  // Now that loading is false, check user and role
+  // Restrict akses jika bukan vendor
   if (!user || user.role !== "vendor") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -65,21 +116,16 @@ export default function TransactionsPage() {
     )
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Aktif</Badge>
-      case "picked_up":
-        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Diambil</Badge>
-      case "overdue":
-        return <Badge variant="destructive">Jatuh Tempo</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  // Badge Status
+  const getStatusBadge = (status: boolean) => {
+    if (status) {
+      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Aktif</Badge>
     }
+    return <Badge variant="destructive">Selesai</Badge>
   }
 
   const getCategoryName = (categoryId: string) => {
-    return mockCategories.find((c) => c.id === categoryId)?.name || "N/A"
+    return mockCategories.find((c) => c.id === categoryId)?.name || "Sedang"
   }
 
   const formatCurrency = (amount: number) => {
@@ -107,7 +153,7 @@ export default function TransactionsPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Cari nama pelanggan, barang, atau QR Code..."
+                placeholder="Cari nama barang atau cabang..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
@@ -121,8 +167,7 @@ export default function TransactionsPage() {
             >
               <option value="all">Semua Status</option>
               <option value="active">Aktif</option>
-              <option value="picked_up">Diambil</option>
-              <option value="overdue">Jatuh Tempo</option>
+              <option value="picked_up">Selesai</option>
             </select>
 
             <div className="text-sm text-gray-600 flex items-center font-medium">
@@ -140,7 +185,7 @@ export default function TransactionsPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-gray-900 text-lg">{transaction.customerName}</CardTitle>
+                      <CardTitle className="text-gray-900 text-lg">{transaction.name}</CardTitle>
                       <div className="flex items-center space-x-2 mt-1">
                         <Badge className="bg-purple-500 hover:bg-purple-600 text-xs text-white">
                           {getCategoryName(transaction.categoryId)}
@@ -148,34 +193,36 @@ export default function TransactionsPage() {
                         {getStatusBadge(transaction.status)}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-green-600">{formatCurrency(transaction.totalAmount)}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatCurrency(transaction.totalPrice)}
+                    </div>
                   </div>
                 </CardHeader>
+
                 <CardContent>
                   <div className="space-y-2 text-sm text-gray-700">
                     <p className="flex items-center space-x-2">
                       <Package className="h-4 w-4 text-gray-400" />
-                      <span>{transaction.itemDescription}</span>
+                      <span>Qty: {transaction.quantity}</span>
                     </p>
                     <p className="flex items-center space-x-2">
                       <CalendarDays className="h-4 w-4 text-gray-400" />
                       <span>
-                        Drop: {transaction.dropDate.toLocaleDateString("id-ID")} ({transaction.duration} hari)
+                        Drop: {new Date(transaction.dateIn).toLocaleDateString("id-ID")} ({transaction.dayTotal} hari)
                       </span>
                     </p>
-                    {transaction.pickupDate && (
-                      <p className="flex items-center space-x-2">
-                        <CalendarDays className="h-4 w-4 text-gray-400" />
-                        <span>Pickup: {transaction.pickupDate.toLocaleDateString("id-ID")}</span>
-                      </p>
-                    )}
+                    <p className="flex items-center space-x-2">
+                      <CalendarDays className="h-4 w-4 text-gray-400" />
+                      <span>Pickup: {new Date(transaction.dateOut).toLocaleDateString("id-ID")}</span>
+                    </p>
                     <p className="flex items-center space-x-2">
                       <QrCode className="h-4 w-4 text-gray-400" />
-                      <span>QR Code: {transaction.qrCode}</span>
+                      <span>Metode: {transaction.paymentMethod}</span>
                     </p>
-                    {transaction.notes && <p className="text-xs text-gray-500">Catatan: {transaction.notes}</p>}
+                    {transaction.bank && (
+                      <p className="text-xs text-gray-500">Bank: {transaction.bank}</p>
+                    )}
                   </div>
-                  {/* Add action buttons here if needed, e.g., Mark as Picked Up */}
                 </CardContent>
               </Card>
             ))}
