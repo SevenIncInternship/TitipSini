@@ -117,7 +117,7 @@ export default function UserForm({
             <SelectValue placeholder="Pilih Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="superadmin">Admin</SelectItem>
+            <SelectItem value="superadmin">superadmin</SelectItem>
             <SelectItem value="customer">customer</SelectItem>
             <SelectItem value="vendor">vendor</SelectItem>
           </SelectContent>

@@ -1,43 +1,14 @@
 "use client"
 
-import { useRef, useState, useEffect, useMemo } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
-import { FileText, Shield, Package, Users, Printer, Eye } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Eye, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { mockDashboardStats, mockInvoices, mockTransactions, mockMitra } from "@/lib/data"
-
-const html2pdfPromise = typeof window !== "undefined" ? import("html2pdf.js") : Promise.resolve(null)
-
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount)
-
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "paid": return <Badge className="bg-green-500 text-white">Lunas</Badge>
-    case "pending": return <Badge className="bg-yellow-500 text-white">Pending</Badge>
-    case "overdue": return <Badge variant="destructive">Jatuh Tempo</Badge>
-    default: return <Badge variant="outline">{status}</Badge>
-  }
-}
-
-const getTransactionStatusBadge = (status: string) => {
-  switch (status) {
-    case "active": return <Badge className="bg-blue-500 text-white">Aktif</Badge>
-    case "picked_up": return <Badge className="bg-green-500 text-white">Diambil</Badge>
-    case "overdue": return <Badge variant="destructive">Jatuh Tempo</Badge>
-    default: return <Badge variant="outline">{status}</Badge>
-  }
-}
+import html2pdf from "html2pdf.js"
+import ReportClient from "./ReportClient"
 
 export default function ReportsPage() {
   const { user, loading } = useAuth()
@@ -46,8 +17,9 @@ export default function ReportsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
+  // 🔒 Redirect ke login jika bukan role yang diizinkan
   useEffect(() => {
-    if (!loading && (!user || !["superadmin", "admin", "finance", "vendor"].includes(user.role))) {
+    if (!loading && (!user || !["superadmin", "admin", "finance", "mitra"].includes(user.role))) {
       router.replace("/login")
     }
   }, [user, loading])
@@ -64,9 +36,6 @@ export default function ReportsPage() {
     if (!reportContentRef.current) return
 
     setIsProcessing(true)
-    const html2pdf = (await html2pdfPromise)?.default
-    if (!html2pdf) return
-
     const options = {
       margin: [0.5, 0.5, 0.5, 0.5],
       filename: `Laporan_Titipsini_${user?.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
@@ -78,8 +47,8 @@ export default function ReportsPage() {
 
     try {
       if (action === "preview") {
-        const url = await html2pdf().from(reportContentRef.current).set(options).outputPdf("bloburl")
-        setPdfPreviewUrl(url)
+        const pdfBlob = await html2pdf().from(reportContentRef.current).set(options).outputPdf("bloburl")
+        setPdfPreviewUrl(pdfBlob)
       } else {
         await html2pdf().from(reportContentRef.current).set(options).save()
       }
@@ -93,66 +62,64 @@ export default function ReportsPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <Sidebar />
       <Header />
 
-      <main className="md:ml-64 pt-16 p-6">
+      <main className="md:ml-64  p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          {/* <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Laporan</h1>
-              <p className="text-gray-600 mt-2">Lihat berbagai laporan dan analitik.</p>
+              <p className="text-gray-600 mt-2">Lihat dan cetak laporan barang.</p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={() => generatePdf("preview")} disabled={isProcessing} className="bg-blue-500 text-white">
+              <Button
+                onClick={() => generatePdf("preview")}
+                disabled={isProcessing}
+                className="bg-blue-500 text-white"
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 {isProcessing ? "Memproses..." : "Preview"}
               </Button>
-              <Button onClick={() => generatePdf("download")} disabled={isProcessing} className="bg-green-500 text-white">
+              <Button
+                onClick={() => generatePdf("download")}
+                disabled={isProcessing}
+                className="bg-green-500 text-white"
+              >
                 <Printer className="h-4 w-4 mr-2" />
                 {isProcessing ? "Mencetak..." : "Download"}
               </Button>
             </div>
-          </div>
-
-          {/* <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm">
-            {(user.role === "superadmin" || user.role === "finance") && (
-              <>
-                <FinancialSummary />
-                <LatestInvoices />
-              </>
-            )}
-
-            {(user.role === "superadmin" || user.role === "admin") && (
-              <>
-                <OperationalSummary />
-                <LatestTransactions />
-              </>
-            )}
-
-            {user.role === "mitra" && (
-              <>
-                <MitraTransactions userId={user.id} />
-                <MitraInvoices userId={user.id} />
-              </>
-            )}
           </div> */}
 
+          {/* ✅ Report content yang diambil dari komponen ReportClient */}
+          <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm">
+            <ReportClient /> {/* Menampilkan daftar goods dari API */}
+          </div>
+
+          {/* ✅ Preview Modal */}
           {pdfPreviewUrl && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
               <div className="bg-white w-full max-w-4xl h-[90vh] rounded-lg overflow-hidden relative flex flex-col">
                 <div className="p-4 bg-gray-100 flex justify-between items-center">
                   <h3 className="text-lg font-bold text-gray-800">Preview Laporan PDF</h3>
-                  <Button onClick={() => {
-                    setPdfPreviewUrl(null)
-                    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl)
-                  }} className="bg-red-500 text-white">
+                  <Button
+                    onClick={() => {
+                      setPdfPreviewUrl(null)
+                      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl)
+                    }}
+                    className="bg-red-500 text-white"
+                  >
                     Tutup Preview
                   </Button>
                 </div>
                 <div className="flex-grow">
-                  <iframe src={pdfPreviewUrl} className="w-full h-full border-none" title="PDF Preview" />
+                  <iframe
+                    src={pdfPreviewUrl}
+                    className="w-full h-full border-none"
+                    title="PDF Preview"
+                  />
                 </div>
               </div>
             </div>

@@ -1,20 +1,64 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/lib/auth"
-import { FileText, Shield, Package, Users, Printer } from "lucide-react"
+import { Shield, Printer } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { mockDashboardStats, mockInvoices, mockTransactions, mockMitra } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import html2pdf from "html2pdf.js"
+
+interface GoodsItem {
+  id: string
+  name: string
+  quantity: number
+  dateIn: string
+  dateOut: string
+  dayTotal: number
+  totalPrice: number
+  paymentMethod: string
+  bank?: string | null
+  status: boolean
+  createdAt: string
+  vendorBranch?: {
+    id: string
+    name: string
+    address?: string
+  }
+}
 
 export default function ReportClient() {
   const { user, loading } = useAuth()
   const reportContentRef = useRef<HTMLDivElement>(null)
   const [isPrinting, setIsPrinting] = useState(false)
+  const [goods, setGoods] = useState<GoodsItem[]>([])
+  const [loadingGoods, setLoadingGoods] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch data barang dari API
+  useEffect(() => {
+    const fetchGoods = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goods`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("titipsini_token")}`, // jika pakai JWT
+          },
+        })
+        if (!res.ok) throw new Error("Gagal memuat data barang")
+        const result = await res.json()
+        console.log("Data barang:", result)
+        setGoods(result.data || [])
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoadingGoods(false)
+      }
+    }
+
+    fetchGoods()
+  }, [])
 
   if (loading) {
     return (
@@ -44,34 +88,12 @@ export default function ReportClient() {
     }).format(amount)
   }
 
-  const getMitraName = (mitraId: string) => {
-    return mockMitra.find((m) => m.id === mitraId)?.name || "N/A"
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Lunas</Badge>
-      case "pending":
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">Pending</Badge>
-      case "overdue":
-        return <Badge variant="destructive">Jatuh Tempo</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
-    }
-  }
-
-  const getTransactionStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Aktif</Badge>
-      case "picked_up":
-        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Diambil</Badge>
-      case "overdue":
-        return <Badge variant="destructive">Jatuh Tempo</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
-    }
+  const getStatusBadge = (status: boolean) => {
+    return status ? (
+      <Badge className="bg-green-500 hover:bg-green-600 text-white">Aktif</Badge>
+    ) : (
+      <Badge variant="destructive">Tidak Aktif</Badge>
+    )
   }
 
   const handlePrintPdf = () => {
@@ -80,11 +102,11 @@ export default function ReportClient() {
       html2pdf()
         .from(reportContentRef.current)
         .set({
-          margin: 1,
-          filename: `Laporan_Titipsini_${user.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
+          margin: 0.5,
+          filename: `Laporan_Goods_${user.role}_${new Date().toLocaleDateString("id-ID")}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+          jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
         })
         .save()
         .finally(() => {
@@ -94,16 +116,15 @@ export default function ReportClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <Header />
+    <div className="min-h-screen ">
 
-      <main className="md:ml-64 pt-16 p-6">
+
+      <main className="">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Laporan</h1>
-              <p className="text-gray-600 mt-2">Lihat berbagai laporan dan analitik.</p>
+              <h1 className="text-3xl font-bold text-gray-900">Laporan Barang</h1>
+              <p className="text-gray-600 mt-2">Laporan data barang dari sistem Titipsini.</p>
             </div>
             <Button onClick={handlePrintPdf} disabled={isPrinting} className="green-gradient hover:opacity-90">
               {isPrinting ? (
@@ -117,7 +138,47 @@ export default function ReportClient() {
           </div>
 
           <div ref={reportContentRef} className="bg-white p-6 rounded-lg shadow-sm">
-            {/* Paste isi laporan di sini (dari sebelumnya) */}
+            {loadingGoods ? (
+              <div className="text-center py-10 text-gray-600">Memuat data barang...</div>
+            ) : error ? (
+              <div className="text-center py-10 text-red-500">{error}</div>
+            ) : goods.length === 0 ? (
+              <div className="text-center py-10 text-gray-500">Belum ada data barang.</div>
+            ) : (
+              <div className="grid gap-4">
+                {goods.map((item) => (
+                  <Card key={item.id} className="border border-gray-200 shadow-none">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-semibold text-gray-900">
+                        {item.name}
+                      </CardTitle>
+                      <p className="text-sm text-gray-500">
+                        Cabang: {item.vendorBranch?.name || "N/A"} | Masuk:{" "}
+                        {new Date(item.dateIn).toLocaleDateString("id-ID")}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-500">Jumlah</p>
+                        <p className="font-medium">{item.quantity}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Durasi (hari)</p>
+                        <p className="font-medium">{item.dayTotal}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Total Harga</p>
+                        <p className="font-medium">{formatCurrency(item.totalPrice)}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Status</p>
+                        {getStatusBadge(item.status)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

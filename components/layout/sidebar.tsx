@@ -65,7 +65,7 @@ const navigationItems = {
     { name: "Profil & Cabang", href: "/profile", icon: Building2 },
     { name: "Transaksi", href: "/transactions", icon: Package },
     { name: "Invoice", href: "/invoices", icon: CreditCard },
-    { name: "Laporan", href: "/reports", icon: FileText },
+    // { name: "Laporan", href: "/reports", icon: FileText },
   ],
 }
 
