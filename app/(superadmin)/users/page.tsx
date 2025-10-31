@@ -269,8 +269,9 @@ export default function UsersPage() {
                             }
                             className="text-xs"
                           >
-                            {u.role.toUpperCase()}
+                            {u.role === "vendor" ? "MITRA" : u.role.toUpperCase()}
                           </Badge>
+
                         </div>
 
                       </div>

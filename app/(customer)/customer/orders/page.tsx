@@ -367,7 +367,7 @@ export default function OrderPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="transfer">Transfer</SelectItem>
-                                    <SelectItem value="cash">Cash</SelectItem>
+                                    {/* <SelectItem value="cash">Cash</SelectItem> */}
                                 </SelectContent>
                             </Select>
                         </div>
